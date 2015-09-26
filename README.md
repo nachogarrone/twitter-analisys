@@ -1,3 +1,3 @@
-#Twitter-analisys
+#Twitter-analysis
 
-We analize sentiment of tweets with a given hashtag or key tags
+We analyze sentiment of tweets with a given hashtag or key tags
