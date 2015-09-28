@@ -67,7 +67,9 @@ public class Processor {
     }
 
     public void analyzeCandidates() throws Exception {
+        System.out.println("Starting to analyze...");
         for (String candidate : candidates) {
+            System.out.println("Analyzing: " + candidate);
             run(candidate);
         }
     }

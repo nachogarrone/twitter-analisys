@@ -18,11 +18,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.twitter</groupId>
-            <artifactId>hbc-core</artifactId>
-            <version>2.2.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.social</groupId>
             <artifactId>spring-social-twitter</artifactId>
             <version>1.1.0.RELEASE</version>
