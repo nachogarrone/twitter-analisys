@@ -85,7 +85,7 @@ public class Processor {
                     result += getDatumBoxValuation(sanitizeText(tweet.getText()));
                 }
             } catch (Exception e) {
-                //System.out.println("error = " + e);
+                //System.out.println("error = " + e );
             }
         }
         System.out.println(input + " = " + result);
