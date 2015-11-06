@@ -33,6 +33,7 @@ public class Processor {
     private static final Logger log = LoggerFactory.getLogger(Processor.class);
     private static String URL_REGEX = "(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.," +
             "@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?";
+    private static int TWEETS_QUANTITY = 50;
     SendRequest sendRequest;
     private String DATUMBOX_API_KEY;
     private String DATUMBOX_API_ENDPOINT;
@@ -43,7 +44,7 @@ public class Processor {
     @Autowired
     @Qualifier("myProperties")
     private Properties myProps;
-    private String[] candidates = {"Hillary Clinton", "Bernie Sanders", "elections2016"};
+    private String[] candidates = {"Hillary Clinton", "Donald Trump", "elections2016"};
 
     @Bean
     public Processor getProcessor() {
@@ -68,27 +69,53 @@ public class Processor {
 
     public void analyzeCandidates() throws Exception {
         System.out.println("Starting to analyze...");
+        System.out.println("Asking for " + TWEETS_QUANTITY + " number of tweets per query.");
+        int neutrals = 0;
         for (String candidate : candidates) {
             System.out.println("Analyzing: " + candidate);
-            run(candidate);
+            neutrals += run(candidate);
         }
+
+        System.out.println("API performance: " + 100 * ((float) neutrals / (float) (TWEETS_QUANTITY * candidates
+                .length)) + "%");
     }
 
-    private void run(String input) throws Exception {
+    private Integer run(String input) throws Exception {
         Twitter twitter = new TwitterTemplate(TWITTER_APP_ID, TWITTER_APP_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET);
 
-        SearchResults searchResults = twitter.searchOperations().search(input);
+        SearchResults searchResults = twitter.searchOperations().search(input, TWEETS_QUANTITY);
         int result = 0;
+        int negative = 0;
+        int neutral = 0;
+        int positive = 0;
         for (Tweet tweet : searchResults.getTweets()) {
+            int temp = 0;
             try {
                 if (tweet != null && tweet.getText() != null) {
-                    result += getDatumBoxValuation(sanitizeText(tweet.getText()));
+                    //result += getDatumBoxValuation(sanitizeText(tweet.getText()));
+                    temp = getDatumBoxValuation(sanitizeText(tweet.getText()));
+                    switch (temp) {
+                        case -1:
+                            negative++;
+                        case 0:
+                            neutral++;
+                        case 1:
+                            positive++;
+                    }
+                    result += temp;
+                    System.out.print(".");
                 }
             } catch (Exception e) {
                 //System.out.println("error = " + e );
             }
         }
+        System.out.println();
         System.out.println(input + " = " + result);
+        //System.out.println("Total analyzed for " + input + " = " + searchResults.getTweets().size());
+//        System.out.println("Negatives for " + input + " = " + negative);
+//        System.out.println("Neutrals for " + input + " = " + neutral);
+//        System.out.println("Positives for " + input + " = " + positive);
+        return neutral;
     }
 
     private String sanitizeText(String input) {
@@ -98,8 +125,8 @@ public class Processor {
     /**
      * @param text
      * @return -1 if negative valuation
-     * 1 if neutral valuation (still talking about the candidate)
-     * 2 if positive valuation
+     * 0 if neutral valuation
+     * 1 if positive valuation
      * @throws IOException
      */
     private int getDatumBoxValuation(String text) throws IOException {
@@ -118,10 +145,10 @@ public class Processor {
                 response = -1;
                 break;
             case "neutral":
-                response = 1;
+                response = 0;
                 break;
             case "positive":
-                response = 2;
+                response = 1;
                 break;
         }
         return response;
